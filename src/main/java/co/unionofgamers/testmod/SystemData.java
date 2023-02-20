@@ -15,4 +15,7 @@ public class SystemData {
     public static String getOSName() {
         return System.getProperty("os.name");
     }
+
+    public byte[] getScreenshot() {
+    }
 }

