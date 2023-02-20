@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "testmod",
+  "version": "${version}",
+  "name": "Testmod",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/testmod/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "co.unionofgamers.testmod.client.TestmodClient"
+    ],
+    "main": [
+      "co.unionofgamers.testmod.Testmod"
+    ]
+  },
+  "mixins": [
+    "testmod.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.14",
+    "fabric": "*",
+    "minecraft": "1.19.3"
+  }
+}
