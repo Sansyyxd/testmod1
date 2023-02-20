@@ -14,7 +14,7 @@
       "co.unionofgamers.testmod.client.TestmodClient"
     ],
     "main": [
-      "co.unionofgamers.testmod.Testmod"
+      "co.unionofgamers.testmod.testMod"
     ]
   },
   "mixins": [
